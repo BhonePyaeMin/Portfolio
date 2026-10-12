@@ -31,7 +31,7 @@ function GitHubIcon({ className = "h-4 w-4" }: { className?: string }) {
 
 const SOCIAL_LINKS = [
   { label: "Email",    href: "mailto:bhonepyaemin.tech@gmail.com", icon: Mail },
-  { label: "LinkedIn", href: "https://www.linkedin.com/in/bhone-pyae-min-b273a4371", icon: LinkedInIcon },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/bhone-pyae-min-77314b434", icon: LinkedInIcon },
   { label: "GitHub",   href: "https://github.com/BhonePyaeMin", icon: GitHubIcon },
   { label: "JobsDB",   href: "https://th.jobsdb.com/th/profiles/bhonepyae-min-ns7y634rgd", icon: Briefcase },
 ];

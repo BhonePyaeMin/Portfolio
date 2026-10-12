@@ -14,7 +14,7 @@ const PAGE = {
   height: 3369,
   links: [
     {
-      href: "https://linkedin.com/in/bhone-pyae-min-b273a4371",
+      href: "https://www.linkedin.com/in/bhone-pyae-min-77314b434",
       label: "Open LinkedIn profile",
       x: 0.0808,
       y: 0.3049,

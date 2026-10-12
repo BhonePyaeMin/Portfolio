@@ -41,7 +41,7 @@ const CONTACTS = [
     id: "linkedin",
     label: "LinkedIn",
     value: "Let's connect",
-    href: "https://www.linkedin.com/in/bhone-pyae-min-b273a4371",
+    href: "https://www.linkedin.com/in/bhone-pyae-min-77314b434",
     icon: <LinkedInIcon />,
     external: true,
     brandColor: "#0A66C2",
