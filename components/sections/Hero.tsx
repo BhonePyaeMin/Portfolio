@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Mail, Briefcase, FileText } from "lucide-react";
 import { ResumeModal } from "@/components/ui/ResumeModal";
+
+// The 3D fox is client-only and loads after the page is interactive
+const HeroFox = dynamic(() => import("@/components/HeroFox"), { ssr: false });
 
 // ─── Custom Icons ─────────────────────────────────────────────────────────────
 
@@ -227,6 +231,8 @@ function TypewriterRow() {
 
 export default function Hero() {
   const [isResumeOpen, setIsResumeOpen] = useState(false);
+  // The CTA buttons double as the fox's walkway
+  const ctaRefs = useRef<(HTMLElement | null)[]>([]);
 
   return (
     <>
@@ -277,7 +283,7 @@ export default function Hero() {
             {/* ── Icon-Only Contact Links ── */}
             <motion.div
               variants={fadeUp}
-              className="mb-8 flex flex-wrap items-center justify-center gap-4"
+              className="mb-16 flex flex-wrap items-center justify-center gap-4"
             >
               {SOCIAL_LINKS.map(({ label, href, icon: Icon }) => (
                 <Tooltip key={label} label={label} position="top">
@@ -304,9 +310,10 @@ export default function Hero() {
             {/* ── CTAs ── */}
             <motion.div
               variants={fadeUp}
-              className="flex flex-wrap items-center justify-center gap-4"
+              className="relative flex flex-wrap items-center justify-center gap-4"
             >
               <a
+                ref={(el) => { ctaRefs.current[0] = el; }}
                 href="#projects"
                 className={[
                   "group relative inline-flex h-10 items-center overflow-hidden",
@@ -326,6 +333,7 @@ export default function Hero() {
               </a>
 
               <a
+                ref={(el) => { ctaRefs.current[1] = el; }}
                 href="#contact"
                 className={[
                   "inline-flex h-10 items-center rounded-full",
@@ -340,6 +348,7 @@ export default function Hero() {
               </a>
 
               <button
+                ref={(el) => { ctaRefs.current[2] = el; }}
                 onClick={() => setIsResumeOpen(true)}
                 className={[
                   "inline-flex h-10 items-center gap-2 rounded-full",
@@ -353,6 +362,8 @@ export default function Hero() {
                 <FileText className="h-4 w-4" />
                 Resume
               </button>
+
+              <HeroFox bars={ctaRefs} />
             </motion.div>
           </motion.div>
         </div>
