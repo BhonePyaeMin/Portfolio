@@ -45,6 +45,8 @@ const CERT_ITEMS = [
     text: "Stay Ahead of the AI Curve",
     verifyUrl: "https://coursera.org/verify/2YKK24R8XPE1",
   },
+  // ASEAN AHEAD (ASEAN Foundation, supported by LinkedIn)
+  { id: 23, image: "/images/cert_asean_ai_career_readiness.png", text: "AI Career Readiness Training" },
   // ASEAN Digital Literacy Programme (ASEAN Foundation, with support from Google.org)
   { id: 16, image: "/images/cert_asean_responsible_digital_citizens.png", text: "Responsible Digital Citizens" },
   { id: 17, image: "/images/cert_asean_positive_participation.png", text: "Positive Participation" },
