@@ -2,13 +2,17 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, useMotionValue, useTransform, AnimatePresence } from "motion/react";
+import { motion, useMotionValue, useTransform, AnimatePresence, animate } from "motion/react";
 import "./Carousel.css";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const DRAG_BUFFER        = 0;
-const VELOCITY_THRESHOLD = 500;
-const GAP                = 24;
+const SWIPE_DISTANCE     = 45;    // px of dragging that counts as a swipe
+const VELOCITY_THRESHOLD = 450;   // …or a quick flick faster than this
+// Distance between card centres, as a share of the card width. Side cards are shrunk and tilted, so a
+// step smaller than the card keeps the visible gaps small; CENTER_PULL then pushes the neighbours of the
+// centre card outward so the enlarged centre card still has a little breathing room.
+const STEP_RATIO         = 0.8;
+const CENTER_PULL        = 0.17;  // × card width
 const SPRING = { type: "spring", stiffness: 460, damping: 38 } as const;
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -151,22 +155,28 @@ function Lightbox({
 
 // ─── Single card ──────────────────────────────────────────────────────────────
 function CarouselItem({
-  item, index, itemWidth, itemHeight, trackItemOffset, centerOffset, x, transition, onImageClick,
+  item, index, itemWidth, itemHeight, trackItemOffset, centerOffset, x, transition, onImageClick, pullPx,
 }: any) {
   const xAtCenter = centerOffset - index * trackItemOffset;
   const prev = xAtCenter + trackItemOffset;
   const next = xAtCenter - trackItemOffset;
 
-  const rotateY   = useTransform(x, [prev, xAtCenter, next], [20, 0, -20], { clamp: false });
-  const scale     = useTransform(x, [prev, xAtCenter, next], [0.78, 1.07, 0.78], { clamp: false });
-  const brightness = useTransform(x, [prev, xAtCenter, next], [0.42, 1.0, 0.42], { clamp: false });
-  const filter    = useTransform(brightness, (b) => `brightness(${b})`);
-  const zIndex    = useTransform(x, [prev, xAtCenter, next], [1, 20, 1], { clamp: false });
+  // Clamped, so every card beyond the first neighbours looks the same as them (before, far cards kept
+  // shrinking and even flared bright, which made the gaps look uneven).
+  const rotateY    = useTransform(x, [prev, xAtCenter, next], [20, 0, -20]);
+  const scale      = useTransform(x, [prev, xAtCenter, next], [0.78, 1.07, 0.78]);
+  const brightness = useTransform(x, [prev, xAtCenter, next], [0.42, 1.0, 0.42]);
+  const filter     = useTransform(brightness, (b) => `brightness(${b})`);
+  const zIndex     = useTransform(x, [prev, xAtCenter, next], [1, 20, 1]);
+  // A swipe that ends over the same picture must not count as a click (it would open the lightbox)
+  const pressedAt  = useRef<{ x: number; y: number } | null>(null);
+  // Neighbours of the centre card are nudged outward (right side right, left side left)
+  const pull       = useTransform(x, [prev, xAtCenter, next], [pullPx, 0, -pullPx]);
 
   return (
     <motion.div
       className="carousel-item"
-      style={{ width: itemWidth, height: itemHeight, rotateY, scale, filter, zIndex }}
+      style={{ width: itemWidth, height: itemHeight, rotateY, scale, filter, zIndex, x: pull, marginRight: trackItemOffset - itemWidth }}
       transition={transition}
     >
       {item.image ? (
@@ -174,7 +184,12 @@ function CarouselItem({
           src={item.image}
           alt={item.title || item.text || "Certificate"}
           draggable={false}
-          onClick={() => onImageClick?.(index)}
+          onPointerDown={(e) => { pressedAt.current = { x: e.clientX, y: e.clientY }; }}
+          onClick={(e) => {
+            const p = pressedAt.current;
+            if (p && Math.hypot(e.clientX - p.x, e.clientY - p.y) > 6) return;
+            onImageClick?.(index);
+          }}
           className="carousel-item-img"
         />
       ) : (
@@ -207,7 +222,8 @@ export default function Carousel({
 }: CarouselProps) {
   const itemWidth       = baseWidth;
   const itemHeight      = Math.round((baseWidth / 4) * 3);
-  const trackItemOffset = itemWidth + GAP;
+  const trackItemOffset = Math.round(itemWidth * STEP_RATIO);
+  const pullPx          = Math.round(itemWidth * CENTER_PULL);
 
   const itemsForRender = useMemo(() => {
     if (!loop || !items.length) return items;
@@ -294,15 +310,40 @@ export default function Carousel({
     setIsAnimating(false);
   };
 
-  // Drag
+  // Swipe / drag: a clear swipe (or a quick flick) moves one card; anything smaller glides back
   const onDragEnd = (_: any, info: any) => {
     const { offset, velocity } = info;
     const dir =
-      offset.x < -DRAG_BUFFER || velocity.x < -VELOCITY_THRESHOLD ?  1
-      : offset.x > DRAG_BUFFER || velocity.x > VELOCITY_THRESHOLD ? -1 : 0;
-    if (!dir) return;
-    setPosition(p => Math.max(0, Math.min(p + dir, itemsForRender.length - 1)));
+      offset.x < -SWIPE_DISTANCE || velocity.x < -VELOCITY_THRESHOLD ?  1
+      : offset.x > SWIPE_DISTANCE || velocity.x > VELOCITY_THRESHOLD ? -1 : 0;
+    const next = Math.max(0, Math.min(position + dir, itemsForRender.length - 1));
+    if (next !== position) { setPosition(next); return; }
+    animate(x, centerOffset - position * trackItemOffset, SPRING);
   };
+
+  // Two-finger left / right on a trackpad (or a sideways mouse wheel) moves through the cards.
+  // Mostly-vertical scrolling is left alone so the page still scrolls normally.
+  useEffect(() => {
+    const el = overflowRef.current;
+    if (!el) return;
+    let acc = 0, lastWheel = 0, lockUntil = 0;
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      e.preventDefault();                       // also stops the browser's swipe-to-go-back gesture
+      const now = performance.now();
+      if (now - lastWheel > 160) acc = 0;
+      lastWheel = now;
+      if (now < lockUntil) return;
+      acc += e.deltaX;
+      if (Math.abs(acc) < 40) return;
+      const dir = acc > 0 ? 1 : -1;
+      acc = 0;
+      lockUntil = now + 420;
+      setPosition((p) => Math.max(0, Math.min(p + dir, itemsForRender.length - 1)));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [itemsForRender.length]);
 
   const dragConstraints = loop ? undefined : {
     left:  centerOffset - trackItemOffset * Math.max(itemsForRender.length - 1, 0),
@@ -354,7 +395,7 @@ export default function Carousel({
             className="carousel-track"
             drag={isAnimating ? false : "x"}
             dragConstraints={dragConstraints}
-            style={{ width: itemWidth, gap: `${GAP}px`, x }}
+            style={{ width: itemWidth, x }}
             onDragEnd={onDragEnd}
             animate={{ x: centerOffset - position * trackItemOffset }}
             transition={effectiveTrans}
@@ -373,6 +414,7 @@ export default function Carousel({
                 x={x}
                 transition={effectiveTrans}
                 onImageClick={handleCardClick}
+                pullPx={pullPx}
               />
             ))}
           </motion.div>

@@ -24,6 +24,7 @@
   will-change: transform;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: pan-y;   /* sideways swipes move the carousel, vertical ones still scroll the page */
 }
 .carousel-track:active { cursor: grabbing; }
 

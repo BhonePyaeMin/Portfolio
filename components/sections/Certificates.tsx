@@ -45,6 +45,11 @@ const CERT_ITEMS = [
     text: "Stay Ahead of the AI Curve",
     verifyUrl: "https://coursera.org/verify/2YKK24R8XPE1",
   },
+  // ASEAN Digital Literacy Programme (ASEAN Foundation, with support from Google.org)
+  { id: 16, image: "/images/cert_asean_responsible_digital_citizens.png", text: "Responsible Digital Citizens" },
+  { id: 17, image: "/images/cert_asean_positive_participation.png", text: "Positive Participation" },
+  { id: 18, image: "/images/cert_asean_misinformation.png", text: "Misinformation & Disinformation" },
+  { id: 19, image: "/images/cert_asean_media_information_literacy.png", text: "Media and Information Literacy" },
   { id: 12, image: "/images/cert_hccda.jpg", text: "HCCDA Tech Essentials" },
   {
     id: 15,
@@ -70,13 +75,17 @@ const CERT_ITEMS = [
     text: "Foundations of Cybersecurity",
     verifyUrl: "https://coursera.org/verify/Q0ZK1W6WHBTO",
   },
+  // ASEAN Cybersecurity Skilling Programme (ASEAN Foundation, supported by Infoxchange)
+  { id: 20, image: "/images/cert_asean_technical_prevention.png", text: "Technical Prevention & Incident Response" },
+  { id: 21, image: "/images/cert_asean_microsoft_secure_world.png", text: "Microsoft's Guide to a Secure Digital World" },
+  { id: 22, image: "/images/cert_asean_digital_safety.png", text: "Digital Safety Awareness & Cybersecurity Hygiene" },
   { id: 10, image: "/images/cert_claude101.jpg", text: "Claude 101" },
   { id: 11, image: "/images/cert_claudecode101.jpg", text: "Claude Code 101" },
   { id: 13, image: "/images/cert_claudeplatform101.jpg", text: "Claude Platform 101" },
   { id: 14, image: "/images/cert_claudecowork.jpg", text: "Intro to Claude Cowork" },
 ];
 
-// HCCDA + HCIA sit in the middle of the list; the carousel opens on HCIA, the exact middle one
+// HCCDA + HCIA sit near the middle of the list; the carousel opens on HCIA
 const START_INDEX = Math.max(0, CERT_ITEMS.findIndex((c) => c.text === "HCIA Datacom"));
 
 // ─── Section ──────────────────────────────────────────────────────────────────
