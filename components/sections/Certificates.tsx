@@ -60,6 +60,12 @@ const CERT_ITEMS = [
     verifyUrl: "https://e.huawei.com/cn/talent/#/cert/certificate-verification",
   },
   {
+    id: 24,
+    image: "/images/cert_hcia_security.png",
+    text: "HCIA Security",
+    verifyUrl: "https://e.huawei.com/cn/talent/#/cert/certificate-verification",
+  },
+  {
     id: 2,
     image: "/images/cert_networksecurity.jpg",
     text: "Connect and Protect: Networks and Network Security",
